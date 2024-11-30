@@ -1,6 +1,7 @@
 import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,9 +16,13 @@ def configurar_chrome():
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     
-    driver = webdriver.Chrome(options=chrome_options)
-    print("Chrome configurado com sucesso!")
-    return driver
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+        print("Chrome configurado com sucesso!")
+        return driver
+    except Exception as e:
+        print(f"Erro detalhado ao configurar Chrome: {str(e)}")
+        raise
 
 def fazer_login(driver):
     try:
