@@ -74,6 +74,51 @@ def fazer_login(driver):
         print(f"URL atual: {driver.current_url}")
         return False
 
+def navegar_menus(driver):
+    try:
+        print("Iniciando navegação pelos menus...")
+        
+        # Clicar em menu_relatorios
+        print("Procurando menu_relatorios...")
+        menu_relatorios = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="menu_relatorios"]'))
+        )
+        menu_relatorios.click()
+        print("Clicou em menu_relatorios")
+        
+        # Clicar em chi_operacional
+        print("Procurando chi_operacional...")
+        chi_operacional = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="chi_operacional"]'))
+        )
+        chi_operacional.click()
+        print("Clicou em chi_operacional")
+        
+        # Clicar em sub_operacional
+        print("Procurando sub_operacional...")
+        sub_operacional = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="sub_operacional"]/a[14]'))
+        )
+        sub_operacional.click()
+        print("Clicou em sub_operacional")
+        
+        # Clicar no botão de relatório
+        print("Procurando botão de relatório...")
+        botao_relatorio = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//input[@type='image' and @src='/images/relatorio.png']"))
+        )
+        botao_relatorio.click()
+        print("Clicou no botão de relatório")
+        
+        time.sleep(2)  # Aguardar carregamento da tabela
+        print("Navegação concluída!")
+        return True
+        
+    except Exception as e:
+        print(f"Erro durante a navegação: {str(e)}")
+        print(f"URL atual: {driver.current_url}")
+        return False
+
 def main():
     print("Iniciando automação...")
     try:
@@ -86,6 +131,11 @@ def main():
     try:
         if fazer_login(driver):
             print("Login realizado com sucesso")
+            if navegar_menus(driver):
+                print("Navegação realizada com sucesso")
+                # Aqui vamos adicionar a extração dos dados
+            else:
+                print("Falha na navegação")
         else:
             print("Falha no login")
     
