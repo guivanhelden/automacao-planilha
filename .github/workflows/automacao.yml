@@ -1,9 +1,9 @@
 name: Automação Planilha
 
 on:
-  workflow_dispatch:  # Permite execução manual
+  workflow_dispatch:
   schedule:
-    - cron: '0 9 * * 1-5'  # Roda às 9h em dias úteis
+    - cron: '0 9 * * 1-5'
 
 jobs:
   executar-automacao:
@@ -21,15 +21,11 @@ jobs:
         with:
           python-version: '3.x'
           
-      - name: Instalar Chrome e ChromeDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
-          google-chrome --version
-          sudo apt-get install -y chromium-chromedriver
-          chromedriver --version
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1.7.2
+        with:
+          chrome-version: stable
+          install-chromedriver: true
           
       - name: Instalar dependências
         run: pip install -r requirements.txt
