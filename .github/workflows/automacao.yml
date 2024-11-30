@@ -23,11 +23,12 @@ jobs:
           
       - name: Instalar Chrome e ChromeDriver
         run: |
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/sources.list.d/google-chrome.list
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          sudo apt-get install -y wget
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
           google-chrome --version
+          sudo apt-get install -y chromium-chromedriver
           chromedriver --version
           
       - name: Instalar dependências
