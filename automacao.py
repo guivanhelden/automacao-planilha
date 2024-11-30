@@ -1,65 +1,96 @@
 import os
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+import pandas as pd
 import time
 
-def fazer_login():
-    url = 'http://vhseguro.sixvox.com.br/'
-    login = os.environ.get('LOGIN')
-    senha = os.environ.get('SENHA')
-    session = requests.Session()
+def configurar_chrome():
+    print("Configurando o Chrome...")
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
     
+    driver = webdriver.Chrome(options=chrome_options)
+    print("Chrome configurado com sucesso!")
+    return driver
+
+def fazer_login(driver):
     try:
-        response = session.get(url)
-        print(f"Status código inicial: {response.status_code}")
+        print("Acessando página de login...")
+        driver.get('http://vhseguro.sixvox.com.br/')
+        print(f"Título da página: {driver.title}")
         
-        dados_login = {
-            'email': login,
-            'xenha': senha,
-        }
+        # Pegar credenciais dos secrets
+        login = os.environ.get('LOGIN')
+        senha = os.environ.get('SENHA')
+        print("Credenciais obtidas dos secrets")
         
-        response_login = session.post(url, data=dados_login)
-        print(f"Status código login: {response_login.status_code}")
+        print("Aguardando campo de email ficar disponível...")
+        email_field = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="email"]'))
+        )
+        print("Campo de email encontrado!")
+        email_field.send_keys(login)
+        print("Email preenchido")
         
-        return session
+        print("Localizando campo de senha...")
+        senha_field = driver.find_element(By.XPATH, '//*[@id="xenha"]')
+        senha_field.send_keys(senha)
+        print("Senha preenchida")
+        
+        print("Localizando botão de login...")
+        login_button = driver.find_element(By.XPATH, '//*[@id="enviar"]')
+        print("Clicando no botão de login...")
+        login_button.click()
+        
+        # Aguardar um momento para verificar se o login foi bem sucedido
+        time.sleep(2)
+        print(f"URL após login: {driver.current_url}")
+        print(f"Título após login: {driver.title}")
+        
+        # Tentar encontrar algum elemento que só existe após o login
+        try:
+            menu = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="menu_relatorios"]'))
+            )
+            print("Menu encontrado - Login confirmado!")
+        except:
+            print("Menu não encontrado - Possível falha no login")
+        
+        return True
+        
     except Exception as e:
         print(f"Erro durante o login: {str(e)}")
-        return None
-
-def navegar_menu(session):
-    try:
-        # Primeiro, clicar em menu_equipe
-        response = session.get('http://vhseguro.sixvox.com.br/Corretor')
-        print(f"Status código navegação: {response.status_code}")
-        
-        # Analisar a estrutura da tabela
-        soup = BeautifulSoup(response.text, 'lxml')
-        tabela = soup.find('table', {'id': 'gv'})
-        
-        if tabela:
-            print("\nCabeçalho da tabela encontrado:")
-            headers = [th.text.strip() for th in tabela.find_all('td', class_='Freezing')]
-            print(headers)
-        else:
-            print("Tabela não encontrada")
-            
-        return response.text
-        
-    except Exception as e:
-        print(f"Erro durante a navegação: {str(e)}")
-        return None
+        print(f"URL atual: {driver.current_url}")
+        return False
 
 def main():
     print("Iniciando automação...")
-    session = fazer_login()
-    if session:
-        print("Login realizado com sucesso")
-        print("\nNavegando para a página do corretor...")
-        conteudo = navegar_menu(session)
-        if conteudo:
-            print("Navegação realizada com sucesso")
-    else:
-        print("Falha no login")
+    try:
+        driver = configurar_chrome()
+        print("Driver criado com sucesso")
+    except Exception as e:
+        print(f"Erro ao criar driver: {str(e)}")
+        return
+    
+    try:
+        if fazer_login(driver):
+            print("Login realizado com sucesso")
+        else:
+            print("Falha no login")
+    
+    except Exception as e:
+        print(f"Erro na execução principal: {str(e)}")
+    
+    finally:
+        print("Encerrando o driver...")
+        driver.quit()
+        print("Driver encerrado")
 
 if __name__ == "__main__":
     main()
