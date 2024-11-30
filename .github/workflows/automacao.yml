@@ -21,5 +21,8 @@ jobs:
         with:
           python-version: '3.x'
           
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+          
       - name: Executar script de automação
         run: python automacao.py
