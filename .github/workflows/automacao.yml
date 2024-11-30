@@ -21,6 +21,11 @@ jobs:
         with:
           python-version: '3.x'
           
+      - name: Instalar Chrome e ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+          
       - name: Instalar dependências
         run: pip install -r requirements.txt
           
