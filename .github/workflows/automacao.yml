@@ -1,0 +1,22 @@
+name: Automação Planilha
+
+on:
+  workflow_dispatch:  # Permite execução manual
+  schedule:
+    - cron: '0 9 * * 1-5'  # Roda às 9h em dias úteis
+
+jobs:
+  executar-automacao:
+    runs-on: ubuntu-latest
+    
+    env:
+      LOGIN: ${{ secrets.LOGIN }}
+      SENHA: ${{ secrets.SENHA }}
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
