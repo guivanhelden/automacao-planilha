@@ -100,7 +100,7 @@ def extrair_dados_tabela(driver):
         
         # Aguarda a tabela carregar completamente
         print("Aguardando carregamento da tabela...")
-        time.sleep(5)  # Aumenta o tempo de espera
+        time.sleep(10)  # Aumenta o tempo de espera
         
         # Script JavaScript para extrair dados da tabela
         script_extracao = """
@@ -118,6 +118,11 @@ def extrair_dados_tabela(driver):
         dados = []
         
         print(f"Processando {len(raw_data)} registros...")
+
+        if len(raw_data) > 0:
+            print("Estrutura do primeiro registro:")
+            print(f"Número de colunas: {len(raw_data[0])}")
+            print("Conteúdo:", raw_data[0])
         
         # Processa os dados em lotes
         batch_size = 100
@@ -127,7 +132,6 @@ def extrair_dados_tabela(driver):
             
             for row in batch:
                 try:
-                    if len(row) >= 28:
                         # Extrai os SKUs
                         sku_administradora = extrair_sku(row[1]) if len(row) > 1 else None
                         sku_corretor = extrair_sku(row[2]) if len(row) > 2 else None
@@ -171,10 +175,13 @@ def extrair_dados_tabela(driver):
                             'cod_corretor': formatar_cod_corretor(row[28]) if len(row) > 28 else None
                         }
                         
-                        if registro['vigencia'] is not None:
-                            batch_processed.append(registro)
+                        # Verifica se é um registro válido (tem pelo menos alguns campos obrigatórios preenchidos)
+                    if registro['proposta'] or registro['titular']:
+                        batch_processed.append(registro)
+                    
                 except Exception as row_error:
                     print(f"Erro ao processar linha: {str(row_error)}")
+                    print(f"Conteúdo da linha com erro: {row}")
                     continue
             
             dados.extend(batch_processed)
@@ -182,15 +189,20 @@ def extrair_dados_tabela(driver):
         
         if len(dados) > 0:
             print(f"Extração concluída! Total de {len(dados)} registros válidos.")
+            # Debug: Mostra exemplo do primeiro registro processado
+            print("Exemplo do primeiro registro processado:")
+            print(dados[0])
             return dados
         else:
             print("Nenhum registro válido foi encontrado após o processamento.")
             return []
-            
+
     except Exception as e:
-        print(f"Erro ao extrair dados da tabela: {str(e)}")
-        print("HTML da página:", driver.page_source[:1000])
-        return []
+            print(f"Erro ao extrair dados da tabela: {str(e)}")
+            # Debug: Tenta encontrar a tabela novamente
+            tabelas = driver.find_elements(By.TAG_NAME, "table")
+            print(f"Número de tabelas encontradas na página: {len(tabelas)}")
+            return []
 
 
 def salvar_no_supabase(dados):
