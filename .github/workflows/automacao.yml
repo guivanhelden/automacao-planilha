@@ -2,10 +2,11 @@ name: Automação Planilha
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 9 * *1-5'
+    - cron: '0 9 * * 1-5'  # Corrigido o espaço entre * e 1-5
 jobs:
   executar-automacao:
     runs-on: ubuntu-latest
+    permissions: write-all    # Adicionando permissões explícitas
     
     env:
       LOGIN: ${{ secrets.LOGIN }}
@@ -14,10 +15,10 @@ jobs:
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
     
     steps:
-      - uses: actions/checkout@v4  # Atualizado para v4
+      - uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v5  # Atualizado para v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
           
