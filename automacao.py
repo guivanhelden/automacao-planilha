@@ -174,10 +174,8 @@ def extrair_dados_tabela(driver):
                             'vencimento': converter_data(row[27]) if len(row) > 27 else None,
                             'cod_corretor': formatar_cod_corretor(row[28]) if len(row) > 28 else None
                         }
-                        
-                        # Verifica se é um registro válido (tem pelo menos alguns campos obrigatórios preenchidos)
-                if registro['proposta'] or registro['titular']:
-                     batch_processed.append(registro)
+                        if registro['proposta'] or registro['titular']:
+                            batch_processed.append(registro)
                     
                 except Exception as row_error:
                     print(f"Erro ao processar linha: {str(row_error)}")
