@@ -64,7 +64,7 @@ def navegar_menus(driver):
         # Clicar em chi_operacional
         print("Procurando chi_operacional...")
         chi_operacional = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="chi_operacional"]'))
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="chi_vendas"]'))
         )
         chi_operacional.click()
         print("Clicou em chi_operacional")
@@ -72,7 +72,7 @@ def navegar_menus(driver):
         # Clicar em sub_operacional
         print("Procurando sub_operacional...")
         sub_operacional = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="sub_operacional"]/a[14]'))
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="sub_vendas"]/a[1]'))
         )
         sub_operacional.click()
         print("Clicou em sub_operacional")
@@ -80,7 +80,7 @@ def navegar_menus(driver):
         # Clicar no botão de relatório
         print("Procurando botão de relatório...")
         botao_relatorio = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//input[@type='image' and @src='/images/relatorio.png']"))
+            EC.element_to_be_clickable((By.XPATH, '//input[contains(@onclick, 'command_argument') and contains(@onclick, 'alterar') and contains(@onclick, '63')]'))
         )
         botao_relatorio.click()
         print("Clicou no botão de relatório")
