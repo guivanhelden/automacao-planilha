@@ -124,72 +124,73 @@ def extrair_dados_tabela(driver):
         for i in range(0, len(raw_data), batch_size):
             batch = raw_data[i:i+batch_size]
             batch_processed = []
-                
-                for row in batch:
-                    try:
-                        if len(row) >= 28:
-                            # Extrai os SKUs
-                            sku_administradora = self.extrair_sku(row[1]) if len(row) > 1 else None
-                            sku_corretor = self.extrair_sku(row[2]) if len(row) > 2 else None
-                            sku_modalidade = self.extrair_sku(row[5]) if len(row) > 5 else None
-                            sku_operadora = self.extrair_sku(row[6]) if len(row) > 6 else None
-                            sku_supervisor = self.extrair_sku(row[20]) if len(row) > 20 else None
-                            
-                            registro = {
-                                'administradora': row[1] if len(row) > 1 else '',
-                                'sku_administradora': sku_administradora,
-                                'corretor': row[2] if len(row) > 2 else '',
-                                'sku_corretor': sku_corretor,
-                                'data_cadastro': self.converter_data(row[3]) if len(row) > 3 else None,
-                                'data_venda': self.converter_data(row[4]) if len(row) > 4 else None,
-                                'modalidade': row[5] if len(row) > 5 else '',
-                                'sku_modalidade': sku_modalidade,
-                                'operadora': row[6] if len(row) > 6 else '',
-                                'sku_operadora': sku_operadora,
-                                'tipo': row[7] if len(row) > 7 else '',
-                                'titular': row[8] if len(row) > 8 else '',
-                                'valor': self.limpar_valor_monetario(row[9]) if len(row) > 9 else 0.0,
-                                'taxa': row[10] if len(row) > 10 else '',
-                                'proposta': row[11] if len(row) > 11 else '',
-                                'qtd_vidas': int(row[12] or 0) if len(row) > 12 else 0,
-                                'qtd_taxas': int(row[13] or 0) if len(row) > 13 else 0,
-                                'mes_aniversario': row[14] if len(row) > 14 else '',
-                                'grupo': row[15] if len(row) > 15 else '',
-                                'plano': row[16] if len(row) > 16 else '',
-                                'status': row[17] if len(row) > 17 else '',
-                                'cpf_cnpj': row[18] if len(row) > 18 else '',
-                                'vigencia': self.converter_data(row[19]) if len(row) > 19 else None,
-                                'supervisor': row[20] if len(row) > 20 else '',
-                                'sku_supervisor': sku_supervisor,
-                                'gerente': row[21] if len(row) > 21 else '',
-                                'distribuidora': row[22] if len(row) > 22 else '',
-                                'cidade': row[23] if len(row) > 23 else '',
-                                'uf': row[24] if len(row) > 24 else '',
-                                'tipo_corretor': row[25] if len(row) > 25 else '',
-                                'parceiro': row[26] if len(row) > 26 else '',
-                                'vencimento': self.converter_data(row[27]) if len(row) > 27 else None,
-                                'cod_corretor': self.formatar_cod_corretor(row[28]) if len(row) > 28 else None
-                            }
-                            
-                            if registro['vigencia'] is not None:
-                                batch_processed.append(registro)
-                    except Exception as row_error:
-                        logging.error(f"Erro ao processar linha: {str(row_error)}")
-                        continue
-                
-                dados.extend(batch_processed)
-                logging.info(f"Processado lote de {len(batch_processed)} registros... Total atual: {len(dados)}")
             
-            if len(dados) > 0:
-                logging.info(f"Extração concluída! Total de {len(dados)} registros válidos.")
-                return dados
-            else:
-                logging.warning("Nenhum registro válido foi encontrado após o processamento.")
-                return []
+            for row in batch:
+                try:
+                    if len(row) >= 28:
+                        # Extrai os SKUs
+                        sku_administradora = extrair_sku(row[1]) if len(row) > 1 else None
+                        sku_corretor = extrair_sku(row[2]) if len(row) > 2 else None
+                        sku_modalidade = extrair_sku(row[5]) if len(row) > 5 else None
+                        sku_operadora = extrair_sku(row[6]) if len(row) > 6 else None
+                        sku_supervisor = extrair_sku(row[20]) if len(row) > 20 else None
+                        
+                        registro = {
+                            'administradora': row[1] if len(row) > 1 else '',
+                            'sku_administradora': sku_administradora,
+                            'corretor': row[2] if len(row) > 2 else '',
+                            'sku_corretor': sku_corretor,
+                            'data_cadastro': converter_data(row[3]) if len(row) > 3 else None,
+                            'data_venda': converter_data(row[4]) if len(row) > 4 else None,
+                            'modalidade': row[5] if len(row) > 5 else '',
+                            'sku_modalidade': sku_modalidade,
+                            'operadora': row[6] if len(row) > 6 else '',
+                            'sku_operadora': sku_operadora,
+                            'tipo': row[7] if len(row) > 7 else '',
+                            'titular': row[8] if len(row) > 8 else '',
+                            'valor': limpar_valor_monetario(row[9]) if len(row) > 9 else 0.0,
+                            'taxa': row[10] if len(row) > 10 else '',
+                            'proposta': row[11] if len(row) > 11 else '',
+                            'qtd_vidas': int(row[12] or 0) if len(row) > 12 else 0,
+                            'qtd_taxas': int(row[13] or 0) if len(row) > 13 else 0,
+                            'mes_aniversario': row[14] if len(row) > 14 else '',
+                            'grupo': row[15] if len(row) > 15 else '',
+                            'plano': row[16] if len(row) > 16 else '',
+                            'status': row[17] if len(row) > 17 else '',
+                            'cpf_cnpj': row[18] if len(row) > 18 else '',
+                            'vigencia': converter_data(row[19]) if len(row) > 19 else None,
+                            'supervisor': row[20] if len(row) > 20 else '',
+                            'sku_supervisor': sku_supervisor,
+                            'gerente': row[21] if len(row) > 21 else '',
+                            'distribuidora': row[22] if len(row) > 22 else '',
+                            'cidade': row[23] if len(row) > 23 else '',
+                            'uf': row[24] if len(row) > 24 else '',
+                            'tipo_corretor': row[25] if len(row) > 25 else '',
+                            'parceiro': row[26] if len(row) > 26 else '',
+                            'vencimento': converter_data(row[27]) if len(row) > 27 else None,
+                            'cod_corretor': formatar_cod_corretor(row[28]) if len(row) > 28 else None
+                        }
+                        
+                        if registro['vigencia'] is not None:
+                            batch_processed.append(registro)
+                except Exception as row_error:
+                    print(f"Erro ao processar linha: {str(row_error)}")
+                    continue
             
-        except Exception as e:
-            logging.error(f"Erro ao extrair dados da tabela: {str(e)}")
+            dados.extend(batch_processed)
+            print(f"Processado lote de {len(batch_processed)} registros... Total atual: {len(dados)}")
+        
+        if len(dados) > 0:
+            print(f"Extração concluída! Total de {len(dados)} registros válidos.")
+            return dados
+        else:
+            print("Nenhum registro válido foi encontrado após o processamento.")
             return []
+            
+    except Exception as e:
+        print(f"Erro ao extrair dados da tabela: {str(e)}")
+        print("HTML da página:", driver.page_source[:1000])
+        return []
 
 
 def salvar_no_supabase(dados):
