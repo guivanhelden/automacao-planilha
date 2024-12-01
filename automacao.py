@@ -1,167 +1,195 @@
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import os
 import time
 from datetime import datetime
-from supabase import create_client
+from supabase import create_client, Client
 import logging
 
 def configurar_chrome():
+    print("Configurando o Chrome...")
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Execução sem interface gráfica
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
     
-    driver = webdriver.Chrome(options=chrome_options)
-    return driver
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+        print("Chrome configurado com sucesso!")
+        return driver
+    except Exception as e:
+        print(f"Erro detalhado ao configurar Chrome: {str(e)}")
+        raise
 
-class SixvoxScraper:
-    def __init__(self):
-        self.driver = None
-        self.supabase = create_client(
+def fazer_login(driver):
+    try:
+        print("Iniciando processo de login...")
+        driver.get("http://vhseguro.sixvox.com.br/")
+        
+        # Espera o campo de email estar disponível
+        email = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="email"]'))
+        )
+        email.send_keys(os.environ.get('LOGIN'))
+        
+        # Preenche a senha
+        password = driver.find_element(By.XPATH, '//*[@id="xenha"]')
+        password.send_keys(os.environ.get('SENHA'))
+        
+        # Clica no botão de login
+        login_button = driver.find_element(By.XPATH, '//*[@id="enviar"]')
+        login_button.click()
+        print("Login realizado com sucesso!")
+        return True
+    except Exception as e:
+        print(f"Erro durante o login: {str(e)}")
+        return False
+
+def navegar_menus(driver):
+    try:
+        print("Iniciando navegação pelos menus...")
+        
+        # Clicar em menu_relatorios
+        print("Procurando menu_relatorios...")
+        menu_relatorios = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="menu_relatorios"]'))
+        )
+        menu_relatorios.click()
+        print("Clicou em menu_relatorios")
+        
+        # Clicar em chi_operacional
+        print("Procurando chi_operacional...")
+        chi_operacional = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="chi_operacional"]'))
+        )
+        chi_operacional.click()
+        print("Clicou em chi_operacional")
+        
+        # Clicar em sub_operacional
+        print("Procurando sub_operacional...")
+        sub_operacional = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="sub_operacional"]/a[14]'))
+        )
+        sub_operacional.click()
+        print("Clicou em sub_operacional")
+        
+        # Clicar no botão de relatório
+        print("Procurando botão de relatório...")
+        botao_relatorio = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//input[@type='image' and @src='/images/relatorio.png']"))
+        )
+        botao_relatorio.click()
+        print("Clicou no botão de relatório")
+        
+        time.sleep(2)  # Aguardar carregamento da tabela
+        print("Navegação concluída!")
+        return True
+        
+    except Exception as e:
+        print(f"Erro durante a navegação: {str(e)}")
+        print(f"URL atual: {driver.current_url}")
+        return False
+
+def extrair_dados_tabela(driver):
+    try:
+        print("Iniciando extração dos dados...")
+        
+        # Script JavaScript para extrair dados da tabela
+        script_extracao = """
+            const rows = Array.from(document.querySelectorAll('tr')).filter(row => 
+                !row.classList.contains('Freezing') && row.cells.length > 0
+            );
+            return rows.map(row => {
+                const cells = Array.from(row.cells);
+                return cells.map(cell => cell.innerText.trim());
+            });
+        """
+        
+        raw_data = driver.execute_script(script_extracao)
+        dados = []
+        
+        for row in raw_data:
+            if len(row) >= 28:
+                registro = {
+                    'data_extracao': datetime.now().strftime('%Y-%m-%d'),
+                    'administradora': row[1],
+                    'corretor': row[2],
+                    'data_cadastro': row[3],
+                    'data_venda': row[4],
+                    'modalidade': row[5],
+                    'operadora': row[6],
+                    'tipo': row[7],
+                    'titular': row[8],
+                    'valor': row[9].replace('R$', '').replace('.', '').replace(',', '.').strip(),
+                    'status': row[17],
+                    'vigencia': row[19]
+                }
+                dados.append(registro)
+                
+        print(f"Extração concluída! {len(dados)} registros encontrados.")
+        return dados
+    except Exception as e:
+        print(f"Erro ao extrair dados da tabela: {str(e)}")
+        return []
+
+def salvar_no_supabase(dados):
+    try:
+        print("Iniciando salvamento no Supabase...")
+        supabase = create_client(
             os.environ.get('SUPABASE_URL'),
             os.environ.get('SUPABASE_KEY')
         )
         
-        # Configuração do logging
-        logging.basicConfig(
-            filename=f'scraping_vendas{datetime.now().strftime("%Y%m%d")}.log',
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
+        # Limpa a tabela existente
+        supabase.table('vendas').delete().neq('id', 0).execute()
+        
+        # Insere os novos dados
+        result = supabase.table('vendas').insert(dados).execute()
+        
+        print(f"Dados salvos com sucesso! {len(dados)} registros inseridos.")
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar no Supabase: {str(e)}")
+        return False
+
+def main():
+    print("Iniciando automação...")
+    try:
+        driver = configurar_chrome()
+        print("Driver criado com sucesso")
+    except Exception as e:
+        print(f"Erro ao criar driver: {str(e)}")
+        return
     
-    def login(self):
-        try:
-            self.driver = configurar_chrome()
-            self.driver.get("http://vhseguro.sixvox.com.br/")
-            
-            email = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//*[@id="email"]'))
-            )
-            email.send_keys(os.environ.get('LOGIN'))
-            
-            password = self.driver.find_element(By.XPATH, '//*[@id="xenha"]')
-            password.send_keys(os.environ.get('SENHA'))
-            
-            login_button = self.driver.find_element(By.XPATH, '//*[@id="enviar"]')
-            login_button.click()
-            logging.info("Login realizado com sucesso!")
-            return True
-        except Exception as e:
-            logging.error(f"Erro no login: {str(e)}")
-            return False
-
-    def navegar_menus(self):
-        try:
-            print("Iniciando navegação pelos menus...")
-            actions = [
-                ('//*[@id="menu_equipe"]', "Menu Equipe"),
-                ('//*[@id="chi_manual"]', "Manual"),
-                ('//*[@id="sub_manual"]', "Sub Manual"),
-                ("//a[@class='botao_menu' and @href='/Corretor']", "Botão Corretor")
-            ]
-            
-            for xpath, description in actions:
-                print(f"Procurando {description}...")
-                elemento = WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, xpath))
-                )
-                elemento.click()
-                print(f"Clicou em {description}")
-                time.sleep(1)
-            
-            return True
-        except Exception as e:
-            print(f"Erro durante a navegação: {str(e)}")
-            return False
-
-    def extrair_dados_tabela(self):
-        try:
-            print("Iniciando extração dos dados...")
-            
-            # Aguarda a tabela carregar
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'gv'))
-            )
-            
-            # Extrai os dados usando BeautifulSoup
-            html = self.driver.page_source
-            soup = BeautifulSoup(html, 'html.parser')
-            tabela = soup.find('table', {'id': 'gv'})
-            
-            if not tabela:
-                print("Tabela não encontrada")
-                return []
-            
-            # Extrai cabeçalhos
-            headers = []
-            for th in tabela.find_all('td', class_='Freezing'):
-                headers.append(th.text.strip())
-            
-            # Extrai dados
-            dados = []
-            for tr in tabela.find_all('tr')[1:]:  # Pula o cabeçalho
-                row = {}
-                cells = tr.find_all('td')
-                for i, cell in enumerate(cells):
-                    if i < len(headers):
-                        row[headers[i]] = cell.text.strip()
-                if row:
-                    dados.append(row)
-            
-            print(f"Extraídos {len(dados)} registros")
-            return dados
-            
-        except Exception as e:
-            print(f"Erro ao extrair dados da tabela: {str(e)}")
-            return []
-
-    def salvar_csv(self, dados):
-        try:
-            if not dados:
-                print("Sem dados para salvar")
-                return False
-            
-            df = pd.DataFrame(dados)
-            filename = f'dados_corretores_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-            df.to_csv(filename, index=False)
-            print(f"Dados salvos em {filename}")
-            return True
-            
-        except Exception as e:
-            print(f"Erro ao salvar CSV: {str(e)}")
-            return False
-    
-    def executar_scraping(self):
-        try:
-            print("Iniciando processo de scraping...")
-            self.configurar_chrome()
-            
-            if self.fazer_login():
-                if self.navegar_menus():
-                    dados = self.extrair_dados_tabela()
-                    if dados:
-                        self.salvar_csv(dados)
+    try:
+        if fazer_login(driver):
+            print("Login realizado com sucesso")
+            if navegar_menus(driver):
+                print("Navegação realizada com sucesso")
+                dados = extrair_dados_tabela(driver)
+                if dados:
+                    if salvar_no_supabase(dados):
+                        print("Processo completado com sucesso!")
                     else:
-                        print("Nenhum dado extraído")
+                        print("Falha ao salvar dados no Supabase")
                 else:
-                    print("Falha na navegação")
+                    print("Nenhum dado foi extraído")
             else:
-                print("Falha no login")
-                
-        except Exception as e:
-            print(f"Erro durante a execução: {str(e)}")
-        finally:
-            if self.driver:
-                self.driver.quit()
-                print("Driver encerrado")
+                print("Falha na navegação")
+        else:
+            print("Falha no login")
+    
+    except Exception as e:
+        print(f"Erro na execução principal: {str(e)}")
+    
+    finally:
+        print("Encerrando o driver...")
+        driver.quit()
+        print("Driver encerrado")
 
 if __name__ == "__main__":
-    try:
-        scraper = SixvoxScraper()
-        scraper.executar_scraping()
-    except Exception as e:
-        logging.error(f"Erro na execução principal: {str(e)}")
+    main()
