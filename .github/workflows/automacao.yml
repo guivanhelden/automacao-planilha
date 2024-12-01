@@ -1,24 +1,23 @@
-name: Automação Scraping
+name: Automação Planilha
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 9 * * 1-5'  # Executa às 9h em dias úteis
-
+    - cron: '0 9 * *1-5'
 jobs:
   executar-automacao:
     runs-on: ubuntu-latest
     
     env:
+      LOGIN: ${{ secrets.LOGIN }}
+      SENHA: ${{ secrets.SENHA }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
-      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
     
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4  # Atualizado para v4
       
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5  # Atualizado para v5
         with:
           python-version: '3.x'
           
@@ -33,10 +32,3 @@ jobs:
           
       - name: Executar script de automação
         run: python automacao.py
-        
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: scraping-logs
-          path: scraping_vendas*.log
