@@ -94,11 +94,36 @@ def navegar_menus(driver):
         print(f"URL atual: {driver.current_url}")
         return False
 
-# Processa os dados em lotes
-            batch_size = 100
-            for i in range(0, len(raw_data), batch_size):
-                batch = raw_data[i:i+batch_size]
-                batch_processed = []
+def extrair_dados_tabela(driver):
+    try:
+        print("Iniciando extração dos dados...")
+        
+        # Aguarda a tabela carregar completamente
+        print("Aguardando carregamento da tabela...")
+        time.sleep(5)  # Aumenta o tempo de espera
+        
+        # Script JavaScript para extrair dados da tabela
+        script_extracao = """
+            const rows = Array.from(document.querySelectorAll('tr')).filter(row => 
+                !row.classList.contains('Freezing') && row.cells.length > 0
+            );
+            return rows.map(row => {
+                const cells = Array.from(row.cells);
+                return cells.map(cell => cell.innerText.trim());
+            });
+        """
+        
+        # Executa o script JavaScript para obter todos os dados de uma vez
+        raw_data = driver.execute_script(script_extracao)
+        dados = []
+        
+        print(f"Processando {len(raw_data)} registros...")
+        
+        # Processa os dados em lotes
+        batch_size = 100
+        for i in range(0, len(raw_data), batch_size):
+            batch = raw_data[i:i+batch_size]
+            batch_processed = []
                 
                 for row in batch:
                     try:
