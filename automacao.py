@@ -1,70 +1,57 @@
-import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
-import pandas as pd
-from datetime import datetime
+import os
 import time
-import re
+from datetime import datetime
+from supabase import create_client
 import logging
+
+def configurar_chrome():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Execução sem interface gráfica
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
 
 class SixvoxScraper:
     def __init__(self):
         self.driver = None
+        self.supabase = create_client(
+            os.environ.get('SUPABASE_URL'),
+            os.environ.get('SUPABASE_KEY')
+        )
         
         # Configuração do logging
         logging.basicConfig(
+            filename=f'scraping_vendas{datetime.now().strftime("%Y%m%d")}.log',
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
     
-    def configurar_chrome(self):
-        print("Configurando o Chrome...")
-        chrome_options = Options()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        
+    def login(self):
         try:
-            self.driver = webdriver.Chrome(options=chrome_options)
-            print("Chrome configurado com sucesso!")
-        except Exception as e:
-            print(f"Erro ao configurar Chrome: {str(e)}")
-            raise
-    
-    def fazer_login(self):
-        try:
-            print("Acessando página de login...")
-            self.driver.get('http://vhseguro.sixvox.com.br/')
-            print(f"Título da página: {self.driver.title}")
+            self.driver = configurar_chrome()
+            self.driver.get("http://vhseguro.sixvox.com.br/")
             
-            # Pegar credenciais dos secrets
-            login = os.environ.get('LOGIN')
-            senha = os.environ.get('SENHA')
-            print("Credenciais obtidas dos secrets")
-            
-            print("Aguardando campo de email...")
-            email_field = WebDriverWait(self.driver, 10).until(
+            email = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, '//*[@id="email"]'))
             )
-            email_field.send_keys(login)
-            print("Email preenchido")
+            email.send_keys(os.environ.get('LOGIN'))
             
-            senha_field = self.driver.find_element(By.XPATH, '//*[@id="xenha"]')
-            senha_field.send_keys(senha)
-            print("Senha preenchida")
+            password = self.driver.find_element(By.XPATH, '//*[@id="xenha"]')
+            password.send_keys(os.environ.get('SENHA'))
             
             login_button = self.driver.find_element(By.XPATH, '//*[@id="enviar"]')
             login_button.click()
-            print("Login realizado")
-            
+            logging.info("Login realizado com sucesso!")
             return True
         except Exception as e:
-            print(f"Erro durante o login: {str(e)}")
+            logging.error(f"Erro no login: {str(e)}")
             return False
 
     def navegar_menus(self):
@@ -173,5 +160,8 @@ class SixvoxScraper:
                 print("Driver encerrado")
 
 if __name__ == "__main__":
-    scraper = SixvoxScraper()
-    scraper.executar_scraping()
+    try:
+        scraper = SixvoxScraper()
+        scraper.executar_scraping()
+    except Exception as e:
+        logging.error(f"Erro na execução principal: {str(e)}")
