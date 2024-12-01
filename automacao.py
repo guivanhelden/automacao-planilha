@@ -176,8 +176,8 @@ def extrair_dados_tabela(driver):
                         }
                         
                         # Verifica se é um registro válido (tem pelo menos alguns campos obrigatórios preenchidos)
-                   if registro['proposta'] or registro['titular']:
-                        batch_processed.append(registro)
+                if registro['proposta'] or registro['titular']:
+                     batch_processed.append(registro)
                     
                 except Exception as row_error:
                     print(f"Erro ao processar linha: {str(row_error)}")
