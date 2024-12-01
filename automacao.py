@@ -176,17 +176,11 @@ def extrair_dados_tabela(driver):
                         }
                         
                         # Verifica se é um registro válido (tem pelo menos alguns campos obrigatórios preenchidos)
-                   if registro['vigencia'] is None:
-    print(f"Registro rejeitado - vigência inválida: {registro['vigencia']}")
-elif not registro['proposta']:
-    print(f"Registro rejeitado - proposta vazia")
-elif not registro['titular']:
-    print(f"Registro rejeitado - titular vazio")
-elif registro['valor'] <= 0:
-    print(f"Registro rejeitado - valor inválido: {registro['valor']}")
-elif not registro['data_venda']:
-    print(f"Registro rejeitado - data de venda inválida")
-else:
+                   if (registro['vigencia'] is not None and 
+    registro['proposta'] and 
+    registro['titular'] and 
+    registro['valor'] > 0 and
+    registro['data_venda']):
     batch_processed.append(registro)
                     
                 except Exception as row_error:
