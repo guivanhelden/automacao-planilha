@@ -84,6 +84,14 @@ def navegar_menus(driver):
         )
         botao_relatorio.click()
         print("Clicou no botão de relatório")
+
+        # Clicar no botão de exe relatório
+        print("Executar relatorio...")
+        botao_relatorio = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//input[@type='submit' and @value='Executar Relatório' and @name='gerar')]'))
+        )
+        botao_relatorio.click()
+        print("Clicou no botão de relatório")
         
         time.sleep(2)  # Aguardar carregamento da tabela
         print("Navegação concluída!")
