@@ -18,6 +18,7 @@ jobs:
       SENHA: ${{ secrets.SENHA }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SUPABASE_KEY_ROLESECRET: ${{ secrets.SUPABASE_KEY_ROLESECRET }}  # Adicionar esta linha
     
     steps:
       - uses: actions/checkout@v4
