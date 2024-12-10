@@ -17,7 +17,7 @@ class SixvoxScraper:
     def __init__(self):
         # Obtém as credenciais das variáveis de ambiente
         self.supabase_url: str = os.environ.get('SUPABASE_URL', '')
-        self.supabase_key: str = os.environ.get('SUPABASE_KEY', '')
+        self.supabase_key: str = os.environ.get('SUPABASE_KEY_ROLESECRET', '')
         self.login_email: str = os.environ.get('LOGIN', '')
         self.login_senha: str = os.environ.get('SENHA', '')
         
