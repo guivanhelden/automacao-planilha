@@ -2,12 +2,8 @@ name: Automação Planilha
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * 1-5'  # 10:00
-    - cron: '30 11 * * 1-5' # 11:30
-    - cron: '0 13 * * 1-5'  # 13:00
-    - cron: '30 14 * * 1-5' # 14:30
-    - cron: '0 16 * * 1-5'  # 16:00
-    - cron: '30 17 * * 1-5' # 17:30
+    - cron: '*/20 10-17 * * 1-5'
+    
 jobs:
   executar-automacao:
     runs-on: ubuntu-latest
