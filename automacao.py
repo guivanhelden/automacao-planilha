@@ -55,17 +55,14 @@ class SixvoxScraper:
             self.setup_driver()
             self.driver.get("http://vhseguro.sixvox.com.br/")
             
-            # Espera o campo de email estar disponível
             email = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, '//*[@id="email"]'))
             )
             email.send_keys(self.login_email)
             
-            # Preenche a senha
             password = self.driver.find_element(By.XPATH, '//*[@id="xenha"]')
             password.send_keys(self.login_senha)
             
-            # Clica no botão de login
             login_button = self.driver.find_element(By.XPATH, '//*[@id="enviar"]')
             login_button.click()
             logging.info("Login realizado com sucesso!")
