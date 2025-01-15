@@ -39,16 +39,14 @@ class SixvoxScraper:
     
     def setup_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument('--headless=new')  # Versão mais recente do argumento headless
+        chrome_options.add_argument('--headless=new')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
         
-        # Configuração do serviço do Chrome
-        service = Service()
-        
-        # Inicializa o driver com as opções
+        # Usando webdriver_manager para gerenciar o ChromeDriver
+        service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         logging.info("Driver do Chrome inicializado com sucesso")
     
