@@ -27,7 +27,7 @@ jobs:
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1.7.2
         with:
-          chrome-version: stable
+          chrome-version: 132.0
           install-chromedriver: true
           
       - name: Instalar dependências
