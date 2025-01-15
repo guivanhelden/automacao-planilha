@@ -2,16 +2,15 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import time
 from datetime import datetime
-from supabase import create_client, Client
-import re
+from supabase import create_client
+import time
 import logging
 import os
-from typing import Optional
 
 class SixvoxScraper:
     def __init__(self):
@@ -24,14 +23,12 @@ class SixvoxScraper:
         if not all([self.supabase_url, self.supabase_key, self.login_email, self.login_senha]):
             raise ValueError("Variáveis de ambiente necessárias não encontradas")
             
-        self.driver: Optional[webdriver.Chrome] = None
-        # Inicializando o cliente Supabase com type hints
-        self.supabase: Client = create_client(
+        self.driver = None
+        self.supabase = create_client(
             supabase_url=self.supabase_url,
             supabase_key=self.supabase_key
         )
         
-        # Configuração do logging
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
@@ -39,15 +36,21 @@ class SixvoxScraper:
     
     def setup_driver(self):
         chrome_options = Options()
+        # Configurações para ambiente headless
         chrome_options.add_argument('--headless=new')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
         
-        # Usando webdriver_manager para gerenciar o ChromeDriver
+        # Mantém o navegador aberto (apenas para ambiente local)
+        if not os.getenv('GITHUB_ACTIONS'):
+            chrome_options.add_experimental_option("detach", True)
+        
         service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.wait = WebDriverWait(self.driver, 10)
+        self.actions = ActionChains(self.driver)
         logging.info("Driver do Chrome inicializado com sucesso")
     
     def login(self):
@@ -55,16 +58,19 @@ class SixvoxScraper:
             self.setup_driver()
             self.driver.get("http://vhseguro.sixvox.com.br/")
             
-            email = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//*[@id="email"]'))
-            )
-            email.send_keys(self.login_email)
+            # Login com esperas explícitas como no código que funcionou
+            username = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="email"]')))
+            username.send_keys(self.login_email)
+            time.sleep(1)
             
-            password = self.driver.find_element(By.XPATH, '//*[@id="xenha"]')
+            password = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="xenha"]')))
             password.send_keys(self.login_senha)
+            time.sleep(1)
             
-            login_button = self.driver.find_element(By.XPATH, '//*[@id="enviar"]')
-            login_button.click()
+            enviar_btn = self.wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="enviar"]')))
+            enviar_btn.click()
+            time.sleep(1)
+            
             logging.info("Login realizado com sucesso!")
             return True
         except Exception as e:
