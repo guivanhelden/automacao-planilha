@@ -27,8 +27,8 @@ jobs:
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1.7.2
         with:
-          chrome-version: stable
-          install-chromedriver: true
+          chrome-version: 131
+          install-chromedriver: 131.0.6778.264
           
       - name: Instalar dependências
         run: pip install -r requirements.txt
