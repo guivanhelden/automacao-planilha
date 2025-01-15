@@ -35,23 +35,30 @@ class SixvoxScraper:
         )
     
     def setup_driver(self):
-        chrome_options = Options()
-        # Configurações para ambiente headless
-        chrome_options.add_argument('--headless=new')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--window-size=1920,1080')
-        
-        # Mantém o navegador aberto (apenas para ambiente local)
-        if not os.getenv('GITHUB_ACTIONS'):
-            chrome_options.add_experimental_option("detach", True)
-        
-        service = Service(ChromeDriverManager().install())
+    chrome_options = Options()
+    chrome_options.add_argument('--headless=new')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
+    
+    try:
+        # Primeiro tenta usar o ChromeDriver instalado no sistema
+        service = Service('/usr/local/bin/chromedriver')
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
-        self.wait = WebDriverWait(self.driver, 10)
-        self.actions = ActionChains(self.driver)
-        logging.info("Driver do Chrome inicializado com sucesso")
+    except Exception as e:
+        logging.warning(f"Erro ao usar ChromeDriver do sistema: {str(e)}")
+        try:
+            # Se falhar, tenta usar o webdriver_manager
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        except Exception as e:
+            logging.error(f"Erro ao inicializar ChromeDriver: {str(e)}")
+            raise
+    
+    self.wait = WebDriverWait(self.driver, 10)
+    self.actions = ActionChains(self.driver)
+    logging.info("Driver do Chrome inicializado com sucesso")
     
     def login(self):
         try:
