@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.utils import ChromeType
 import time
 from datetime import datetime
 from supabase import create_client, Client
@@ -45,9 +46,11 @@ class SixvoxScraper:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
         
-        # Usando webdriver_manager para gerenciar o ChromeDriver
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Gerenciar versões automaticamente com ChromeDriverManager
+        self.driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install()), 
+            options=chrome_options
+        )
         logging.info("Driver do Chrome inicializado com sucesso")
     
     def login(self):
