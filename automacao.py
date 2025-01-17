@@ -4,15 +4,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.utils import ChromeType
-import time
 from datetime import datetime
-from supabase import create_client, Client
-import re
+from supabase import create_client
+import time
 import logging
 import os
-from typing import Optional
 
 class SixvoxScraper:
     def __init__(self):
