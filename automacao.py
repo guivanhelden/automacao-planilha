@@ -13,20 +13,16 @@ import os
 class SixvoxScraper:
     def __init__(self):
         # Obtém as credenciais das variáveis de ambiente
-        self.supabase_url: str = os.environ.get('SUPABASE_URL', '')
-        self.supabase_key: str = os.environ.get('SUPABASE_KEY_ROLESECRET', '')
-        self.login_email: str = os.environ.get('LOGIN', '')
-        self.login_senha: str = os.environ.get('SENHA', '')
+        self.supabase_url = os.environ.get('SUPABASE_URL')
+        self.supabase_key = os.environ.get('SUPABASE_KEY')
+        self.login_email = os.environ.get('LOGIN')
+        self.login_senha = os.environ.get('SENHA')
         
         if not all([self.supabase_url, self.supabase_key, self.login_email, self.login_senha]):
             raise ValueError("Variáveis de ambiente necessárias não encontradas")
             
-        self.driver: Optional[webdriver.Chrome] = None
-        # Inicializando o cliente Supabase com type hints
-        self.supabase: Client = create_client(
-            supabase_url=self.supabase_url,
-            supabase_key=self.supabase_key
-        )
+        self.driver = None
+        self.supabase = create_client(self.supabase_url, self.supabase_key)
         
         # Configuração do logging
         logging.basicConfig(
@@ -42,11 +38,8 @@ class SixvoxScraper:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
         
-        # Gerenciar versões automaticamente com ChromeDriverManager
-        self.driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install()), 
-            options=chrome_options
-        )
+        service = Service()
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
         logging.info("Driver do Chrome inicializado com sucesso")
     
     def login(self):
