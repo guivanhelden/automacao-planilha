@@ -176,7 +176,7 @@ class SixvoxScraper:
                                 'supervisor': row[16],
                                 'distribuidora': row[17],
                                 'equipe': row[18],
-                                'cnpj/cpf': row[19],  # Nova coluna adicionada
+                                'cnpj_cpf': row[19],  # Nova coluna adicionada
                                 'data_cadastro': self.converter_data(row[20])  # Nova coluna adicionada
                             }
                             if registro['vigencia'] is not None:
