@@ -155,7 +155,7 @@ class SixvoxScraper:
                 for row in batch:
                     try:
                         # Verifica se há colunas suficientes (agora no mínimo 20)
-                        if len(row) >= 20:
+                        if len(row) >= 21:
                             registro = {
                                 'vigencia': self.converter_data(row[0]),
                                 'status': row[1],
@@ -176,7 +176,8 @@ class SixvoxScraper:
                                 'supervisor': row[16],
                                 'distribuidora': row[17],
                                 'equipe': row[18],
-                                'cnpj/cpf': row[19]  # Nova coluna adicionada
+                                'cnpj/cpf': row[19],  # Nova coluna adicionada
+                                'data_cadastro': row[20]  # Nova coluna adicionada
                             }
                             if registro['vigencia'] is not None:
                                 batch_processed.append(registro)
