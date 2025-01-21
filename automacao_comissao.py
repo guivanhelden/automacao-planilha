@@ -177,7 +177,7 @@ class SixvoxScraper:
                                 'distribuidora': row[17],
                                 'equipe': row[18],
                                 'cnpj/cpf': row[19],  # Nova coluna adicionada
-                                'data_cadastro': row[20]  # Nova coluna adicionada
+                                'data_cadastro': self.converter_data(row[20])  # Nova coluna adicionada
                             }
                             if registro['vigencia'] is not None:
                                 batch_processed.append(registro)
