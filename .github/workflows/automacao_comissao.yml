@@ -12,30 +12,53 @@ on:
 jobs:
   executar-automacao:
     runs-on: ubuntu-latest
-    permissions: write-all
-    
+    timeout-minutes: 15  # 🔹 Evita workflows travados
+    permissions:
+      contents: read  # 🔹 Restringe permissões para maior segurança
+
     env:
       LOGIN: ${{ secrets.LOGIN }}
       SENHA: ${{ secrets.SENHA }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-    
+
     steps:
       - uses: actions/checkout@v4
       
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          
+          python-version: '3.11'  # 🔹 Usa uma versão estável do Python
+      
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1.7.2
         with:
           chrome-version: 131
           install-chromedriver: 131.0.6778.264
-          
-      - name: Instalar dependências
-        run: pip install -r requirements.txt
+
+      - name: Verificar instalação do ChromeDriver
+        run: |
+          chromedriver --version
+          which chromedriver
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Instalar pacotes do sistema
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3-dev pkg-config libffi-dev
+      
+      - name: Instalar dependências Python
+        run: |
+          pip install --upgrade pip
+          pip install --only-binary pandas -r requirements.txt  # 🔹 Evita compilação manual do pandas
           
       - name: Executar script de automação
-        run: python automacao_comissao.py
+        run: |
+          set -o pipefail
+          python automacao_comissao.py | tee automacao_comissao.log
+        continue-on-error: false
