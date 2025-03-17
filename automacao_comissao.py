@@ -154,8 +154,8 @@ class SixvoxScraper:
                 
                 for row in batch:
                     try:
-                        # Verifica se há colunas suficientes (agora no mínimo 20)
-                        if len(row) >= 21:
+                        # Verifica se há colunas suficientes (agora no mínimo 23 para incluir as novas colunas)
+                        if len(row) >= 23:
                             registro = {
                                 'vigencia': self.converter_data(row[0]),
                                 'status': row[1],
@@ -176,8 +176,39 @@ class SixvoxScraper:
                                 'supervisor': row[16],
                                 'distribuidora': row[17],
                                 'equipe': row[18],
-                                'cnpj_cpf': row[19],  # Nova coluna adicionada
-                                'data_cadastro': self.converter_data(row[20])  # Nova coluna adicionada
+                                'cnpj_cpf': row[19],  
+                                'data_cadastro': self.converter_data(row[20]),
+                                'cod_regra_corretor': int(row[21] or 0),  # Nova coluna
+                                'cod_regra': int(row[22] or 0)  # Nova coluna
+                            }
+                            if registro['vigencia'] is not None:
+                                batch_processed.append(registro)
+                        elif len(row) == 21:
+                            # Caso ainda não tenha as novas colunas no relatório, usa valores padrão
+                            registro = {
+                                'vigencia': self.converter_data(row[0]),
+                                'status': row[1],
+                                'corretor': row[2],
+                                'proposta': row[3],
+                                'titular': row[4],
+                                'tipo': row[5],
+                                'operadora': row[6],
+                                'administradora': row[7],
+                                'parcela': int(row[8] or 0),
+                                'base_de_calculo': self.limpar_valor_monetario(row[9]),
+                                'data_repasse': self.converter_data(row[10]),
+                                'percentual_comissao': float(row[11].replace('%', '') or 0),
+                                'valor_comissao': self.limpar_valor_monetario(row[12]),
+                                'percentual_corretor': float(row[13].replace('%', '') or 0),
+                                'comissao_paga_corretor': self.limpar_valor_monetario(row[14]),
+                                'comissao_a_pagar': self.limpar_valor_monetario(row[15]),
+                                'supervisor': row[16],
+                                'distribuidora': row[17],
+                                'equipe': row[18],
+                                'cnpj_cpf': row[19],  
+                                'data_cadastro': self.converter_data(row[20]),
+                                'cod_regra_corretor': 0,  # Valor padrão para casos onde não existe a coluna
+                                'cod_regra': 0  # Valor padrão para casos onde não existe a coluna
                             }
                             if registro['vigencia'] is not None:
                                 batch_processed.append(registro)
