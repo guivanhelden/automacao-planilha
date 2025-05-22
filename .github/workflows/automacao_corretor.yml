@@ -55,5 +55,5 @@ jobs:
       - name: Executar script de automação
         run: |
           set -o pipefail
-          python automacao_comissao.py | tee automacao_comissao.log
+          python automacao_corretor.py | tee automacao_corretor.log
         continue-on-error: false
