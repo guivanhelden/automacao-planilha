@@ -7,35 +7,36 @@ on:
 jobs:
   executar-automacao:
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # 🔹 Evita workflows travados
+    timeout-minutes: 15  # 🔹 Garante que não fica rodando para sempre
     permissions:
-      contents: read  # 🔹 Restringe permissões para maior segurança
-
+      contents: read  # 🔹 Evita permissões desnecessárias
+    
     env:
       LOGIN: ${{ secrets.LOGIN }}
       SENHA: ${{ secrets.SENHA }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-
+      SUPABASE_KEY_ROLESECRET: ${{ secrets.SUPABASE_KEY_ROLESECRET }}
+    
     steps:
       - uses: actions/checkout@v4
       
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # 🔹 Usa uma versão estável do Python
+          python-version: '3.11'  # 🔹 Usa versão estável do Python
       
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1.7.2
         with:
           chrome-version: 131
           install-chromedriver: 131.0.6778.264
-
+      
       - name: Verificar instalação do ChromeDriver
         run: |
           chromedriver --version
           which chromedriver
-
+      
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
