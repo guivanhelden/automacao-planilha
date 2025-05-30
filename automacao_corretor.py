@@ -166,6 +166,7 @@ class SixvoxCorretorScraper:
                         'nome_corretor': nome_corretor,
                         'tipo': tipo,
                         'nome_equipe': nome_equipe,
+                        'equipe_completa': equipe_completa,  # FORMATO ORIGINAL COMPLETO
                         'codigo_equipe': codigo_equipe,
                         'data_entrada': data_entrada
                     }
@@ -209,12 +210,13 @@ class SixvoxCorretorScraper:
                         # Converter codigo_equipe para int também
                         sku_equipe = int(corretor['codigo_equipe']) if corretor['codigo_equipe'] else None
                         
-                        # Preparar os dados para atualização
+                        # Preparar os dados para atualização - INCLUINDO SUPERVISOR
                         dados_atualizacao = {
                             'nome_corretor': corretor['nome_corretor'],
                             'grade': corretor['tipo'],
                             'equipe': corretor['nome_equipe'],
-                            'sku_equipe': sku_equipe
+                            'sku_equipe': sku_equipe,
+                            'supervisor': corretor['equipe_completa']  # FORMATO ORIGINAL COMPLETO COM CÓDIGO
                         }
                         
                         # Fazer o UPDATE onde sku_corretor = codigo extraído
@@ -224,7 +226,7 @@ class SixvoxCorretorScraper:
                         if response.data and len(response.data) > 0:
                             sucessos += 1
                             if sucessos <= 5:  # Log das primeiras 5 atualizações para debug
-                                logging.info(f"Corretor atualizado - SKU: {sku_corretor}, Nome: {corretor['nome_corretor']}, Tipo: {corretor['tipo']}")
+                                logging.info(f"Corretor atualizado - SKU: {sku_corretor}, Nome: {corretor['nome_corretor']}, Tipo: {corretor['tipo']}, Supervisor: {corretor['equipe_completa']}")
                         else:
                             nao_encontrados += 1
                             if nao_encontrados <= 10:  # Log dos primeiros 10 não encontrados
