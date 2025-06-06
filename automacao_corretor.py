@@ -214,7 +214,7 @@ class SixvoxCorretorScraper:
                         dados_atualizacao = {
                             'nome_corretor': corretor['nome_corretor'],
                             'grade': corretor['tipo'],
-                            'equipe': corretor['nome_equipe'],
+                            'equipe': corretor['equipe_completa'],
                             'sku_equipe': sku_equipe,
                             'supervisor': corretor['equipe_completa']  # FORMATO ORIGINAL COMPLETO COM CÓDIGO
                         }
