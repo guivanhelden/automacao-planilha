@@ -178,7 +178,7 @@ class SixvoxScraper:
                             'corretor': row[2] if len(row) > 2 else '',
                             'sku_corretor': self.extrair_sku(row[2]) if len(row) > 2 else None,
                             'data_cadastro': self.converter_data(row[3]) if len(row) > 3 else None,
-                            'data_venda': self.converter_data(row[4]) if len(row) > 4 else None,
+                            'data_venda': self.converter_data(row[3]) if len(row) > 3 else None,
                             'modalidade': row[5] if len(row) > 5 else '',
                             'sku_modalidade': self.extrair_sku(row[5]) if len(row) > 5 else None,
                             'operadora': row[6] if len(row) > 6 else '',
