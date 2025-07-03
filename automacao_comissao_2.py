@@ -279,44 +279,46 @@ class SixvoxComissaoScraper:
                             except (ValueError, TypeError):
                                 return 0.0
                         
-                        # Mapeamento básico - ajustar conforme estrutura real
+                        # Mapeamento correto baseado na estrutura real do HTML
                         registro = {
-                            'vigencia': self.converter_data(row[0]) if len(row) > 0 else None,
-                            'status': str(row[1]).strip() if len(row) > 1 else '',
-                            'corretor': str(row[2]).strip() if len(row) > 2 else '',
-                            'proposta': str(row[3]).strip() if len(row) > 3 else '',
-                            'titular': str(row[4]).strip() if len(row) > 4 else '',
-                            'tipo': str(row[5]).strip() if len(row) > 5 else '',
-                            'modalidade': str(row[6]).strip() if len(row) > 6 else '',
-                            'operadora': str(row[7]).strip() if len(row) > 7 else '',
-                            'administradora': str(row[8]).strip() if len(row) > 8 else '',
-                            'qtd_vidas': safe_int_convert(row[9]) if len(row) > 9 else 0,
-                            'tipo_corretor': str(row[10]).strip() if len(row) > 10 else '',
-                            'data_cadastro': self.converter_data(row[11]) if len(row) > 11 else None,
-                            'parcela': safe_int_convert(row[12]) if len(row) > 12 else 0,
-                            'vencimento': self.converter_data(row[13]) if len(row) > 13 else None,
-                            'base_de_calculo': self.limpar_valor_monetario(row[14]) if len(row) > 14 else 0.0,
-                            'data_repasse': self.converter_data(row[15]) if len(row) > 15 else None,
-                            'percentual_comissao': safe_percent_convert(row[16]) if len(row) > 16 else 0.0,
-                            'valor_comissao': self.limpar_valor_monetario(row[17]) if len(row) > 17 else 0.0,
-                            'percentual_corretor': safe_percent_convert(row[18]) if len(row) > 18 else 0.0,
-                            'comissao_a_pagar': self.limpar_valor_monetario(row[19]) if len(row) > 19 else 0.0,
-                            'comissao_paga_corretor': self.limpar_valor_monetario(row[20]) if len(row) > 20 else 0.0,
-                            'comissao_paga_supervisor': self.limpar_valor_monetario(row[21]) if len(row) > 21 else 0.0,
-                            'comissao_paga_gerente': self.limpar_valor_monetario(row[22]) if len(row) > 22 else 0.0,
-                            'comissao_paga_parceiro1': self.limpar_valor_monetario(row[23]) if len(row) > 23 else 0.0,
-                            'comissao_paga_parceiro2': self.limpar_valor_monetario(row[24]) if len(row) > 24 else 0.0,
-                            'supervisor': str(row[25]).strip() if len(row) > 25 else '',
-                            'distribuidora': str(row[26]).strip() if len(row) > 26 else '',
-                            'equipe': str(row[27]).strip() if len(row) > 27 else '',
-                            'cnpj_cpf': str(row[28]).strip() if len(row) > 28 else '',
-                            'cod_regra_corretor': safe_int_convert(row[29]) if len(row) > 29 else 0,
-                            'cod_regra': safe_int_convert(row[30]) if len(row) > 30 else 0,
-                            # SKUs extraídos
-                            'sku_corretor': self.extrair_sku(row[2]) if len(row) > 2 else None,
-                            'sku_operadora': self.extrair_sku(row[7]) if len(row) > 7 else None,
-                            'sku_administradora': self.extrair_sku(row[8]) if len(row) > 8 else None,
-                            'sku_modalidade': self.extrair_sku(row[6]) if len(row) > 6 else None
+                            # Informações básicas da venda (baseado na ordem real)
+                            'vigencia': self.converter_data(row[0]) if len(row) > 0 else None,  # 15/11/2015
+                            'status': str(row[1]).strip() if len(row) > 1 else '',  # Ativa
+                            'corretor': str(row[2]).strip() if len(row) > 2 else '',  # Bruno Ravasco de Almeida - Corretor (4837)
+                            'proposta': str(row[3]).strip() if len(row) > 3 else '',  # 3613834
+                            'titular': str(row[4]).strip() if len(row) > 4 else '',  # ROSEMEIRE GOMES
+                            'tipo': str(row[5]).strip() if len(row) > 5 else '',  # PF
+                            'modalidade': str(row[6]).strip() if len(row) > 6 else '',  # HAPVIDA CLINIPAM (266)
+                            'administradora': str(row[7]).strip() if len(row) > 7 else '',  # -DIRETO
+                            'parcela': safe_int_convert(row[8]) if len(row) > 8 else 0,  # 1
+                            'base_de_calculo': self.limpar_valor_monetario(row[9]) if len(row) > 9 else 0.0,  # R$ 737,94
+                            'data_repasse': self.converter_data(row[10]) if len(row) > 10 else None,  # 17/12/2024
+                            'percentual_comissao': safe_percent_convert(row[11]) if len(row) > 11 else 0.0,  # 100.00
+                            'valor_comissao': self.limpar_valor_monetario(row[12]) if len(row) > 12 else 0.0,  # R$ 813,41
+                            'percentual_corretor': safe_percent_convert(row[13]) if len(row) > 13 else 0.0,  # 100.00
+                            'comissao_a_pagar': self.limpar_valor_monetario(row[14]) if len(row) > 14 else 0.0,  # R$ 737,94
+                            'comissao_paga_corretor': self.limpar_valor_monetario(row[15]) if len(row) > 15 else 0.0,  # R$ 737,94
+                            'supervisor': str(row[16]).strip() if len(row) > 16 else '',  # Leandro Lombardi (4489)
+                            'distribuidora': str(row[17]).strip() if len(row) > 17 else '',  # (vazio)
+                            'equipe': str(row[18]).strip() if len(row) > 18 else '',  # Leandro Lombardi (37)
+                            'cnpj_cpf': str(row[19]).strip() if len(row) > 19 else '',  # 12387735838
+                            'data_cadastro': self.converter_data(row[20]) if len(row) > 20 else None,  # 06/11/2024
+                            'cod_regra_corretor': safe_int_convert(row[21]) if len(row) > 21 else 0,  # 956
+                            'cod_regra': safe_int_convert(row[22]) if len(row) > 22 else 0,  # 664
+                            'operadora': str(row[23]).strip() if len(row) > 23 else '',  # INDIVIDUAL SAÚDE (182)
+                            'qtd_vidas': safe_int_convert(row[24]) if len(row) > 24 else 0,  # 1
+                            'vencimento': self.converter_data(row[25]) if len(row) > 25 else None,  # 15/11/2024
+                            'comissao_paga_supervisor': self.limpar_valor_monetario(row[26]) if len(row) > 26 else 0.0,  # R$ 0,00
+                            'comissao_paga_gerente': self.limpar_valor_monetario(row[27]) if len(row) > 27 else 0.0,  # R$ 0,00
+                            'comissao_paga_parceiro1': self.limpar_valor_monetario(row[28]) if len(row) > 28 else 0.0,  # R$ 0,00
+                            'comissao_paga_parceiro2': self.limpar_valor_monetario(row[29]) if len(row) > 29 else 0.0,  # R$ 0,00
+                            'tipo_corretor': str(row[30]).strip() if len(row) > 30 else '',  # DIAMOND
+                            
+                            # SKUs extraídos para melhor análise
+                            'sku_corretor': self.extrair_sku(row[2]) if len(row) > 2 else None,  # (4837)
+                            'sku_modalidade': self.extrair_sku(row[6]) if len(row) > 6 else None,  # (266)
+                            'sku_operadora': self.extrair_sku(row[23]) if len(row) > 23 else None,  # (182)
+                            'sku_administradora': None  # Não há SKU para administradora neste caso (-DIRETO)
                         }
                         
                         # Validação de qualidade dos dados
@@ -332,8 +334,15 @@ class SixvoxComissaoScraper:
                             if len(dados) + len(batch_processed) <= 3:
                                 logging.info(f"DEBUG - Registro {len(dados) + len(batch_processed)} processado:")
                                 logging.info(f"  Vigência: {registro['vigencia']}")
+                                logging.info(f"  Status: {registro['status']}")
                                 logging.info(f"  Proposta: {registro['proposta']}")
                                 logging.info(f"  Corretor: {registro['corretor'][:50]}...")
+                                logging.info(f"  Modalidade: {registro['modalidade']}")
+                                logging.info(f"  Operadora: {registro['operadora']}")
+                                logging.info(f"  Qtd Vidas: {registro['qtd_vidas']}")
+                                logging.info(f"  Tipo Corretor: {registro['tipo_corretor']}")
+                                logging.info(f"  Valor Comissão: {registro['valor_comissao']}")
+                                logging.info(f"  Vencimento: {registro['vencimento']}")
                         else:
                             logging.warning(f"Linha {i + row_index + 1} rejeitada - dados essenciais faltando")
                             
