@@ -19,8 +19,8 @@ jobs:
     env:
       LOGIN: ${{ secrets.LOGIN }}
       SENHA: ${{ secrets.SENHA }}
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SUPABASE_URL_2: ${{ secrets.SUPABASE_URL_2 }}
+      SUPABASE_KEY_2: ${{ secrets.SUPABASE_KEY_2 }}
 
     steps:
       - uses: actions/checkout@v4
