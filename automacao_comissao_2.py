@@ -229,7 +229,7 @@ class SixvoxComissaoScraper:
             
             # Script JavaScript otimizado para extrair dados
             script_extracao = """
-                const rows = Array.from(document.querySelectorAll('tbody tr')).filter(row => 
+                const rows = Array.from(document.querySelectorAll('tr')).filter(row => 
                     !row.classList.contains('Freezing') && 
                     row.cells.length > 0 && 
                     row.cells[0] && 
@@ -255,8 +255,8 @@ class SixvoxComissaoScraper:
                 
                 for row_index, row in enumerate(batch):
                     try:
-                        # Validação mais robusta do número de colunas - agora esperamos mais colunas
-                        if len(row) < 20:
+                        # Validação básica do número de colunas - adaptável
+                        if len(row) < 15:
                             logging.warning(f"Linha {i + row_index + 1} com apenas {len(row)} colunas - pulando")
                             continue
                         
@@ -279,10 +279,8 @@ class SixvoxComissaoScraper:
                             except (ValueError, TypeError):
                                 return 0.0
                         
-                        # Mapeamento das colunas baseado na descrição fornecida
-                        # Ajustar índices conforme a estrutura real da tabela
+                        # Mapeamento básico - ajustar conforme estrutura real
                         registro = {
-                            # Informações básicas da venda
                             'vigencia': self.converter_data(row[0]) if len(row) > 0 else None,
                             'status': str(row[1]).strip() if len(row) > 1 else '',
                             'corretor': str(row[2]).strip() if len(row) > 2 else '',
@@ -295,8 +293,6 @@ class SixvoxComissaoScraper:
                             'qtd_vidas': safe_int_convert(row[9]) if len(row) > 9 else 0,
                             'tipo_corretor': str(row[10]).strip() if len(row) > 10 else '',
                             'data_cadastro': self.converter_data(row[11]) if len(row) > 11 else None,
-                            
-                            # Informações de pagamento e comissão
                             'parcela': safe_int_convert(row[12]) if len(row) > 12 else 0,
                             'vencimento': self.converter_data(row[13]) if len(row) > 13 else None,
                             'base_de_calculo': self.limpar_valor_monetario(row[14]) if len(row) > 14 else 0.0,
@@ -305,25 +301,18 @@ class SixvoxComissaoScraper:
                             'valor_comissao': self.limpar_valor_monetario(row[17]) if len(row) > 17 else 0.0,
                             'percentual_corretor': safe_percent_convert(row[18]) if len(row) > 18 else 0.0,
                             'comissao_a_pagar': self.limpar_valor_monetario(row[19]) if len(row) > 19 else 0.0,
-                            
-                            # Comissões pagas efetivamente
                             'comissao_paga_corretor': self.limpar_valor_monetario(row[20]) if len(row) > 20 else 0.0,
                             'comissao_paga_supervisor': self.limpar_valor_monetario(row[21]) if len(row) > 21 else 0.0,
                             'comissao_paga_gerente': self.limpar_valor_monetario(row[22]) if len(row) > 22 else 0.0,
                             'comissao_paga_parceiro1': self.limpar_valor_monetario(row[23]) if len(row) > 23 else 0.0,
                             'comissao_paga_parceiro2': self.limpar_valor_monetario(row[24]) if len(row) > 24 else 0.0,
-                            
-                            # Informações organizacionais
                             'supervisor': str(row[25]).strip() if len(row) > 25 else '',
                             'distribuidora': str(row[26]).strip() if len(row) > 26 else '',
                             'equipe': str(row[27]).strip() if len(row) > 27 else '',
                             'cnpj_cpf': str(row[28]).strip() if len(row) > 28 else '',
-                            
-                            # Códigos de regras (colunas opcionais)
                             'cod_regra_corretor': safe_int_convert(row[29]) if len(row) > 29 else 0,
                             'cod_regra': safe_int_convert(row[30]) if len(row) > 30 else 0,
-                            
-                            # SKUs extraídos para melhor análise
+                            # SKUs extraídos
                             'sku_corretor': self.extrair_sku(row[2]) if len(row) > 2 else None,
                             'sku_operadora': self.extrair_sku(row[7]) if len(row) > 7 else None,
                             'sku_administradora': self.extrair_sku(row[8]) if len(row) > 8 else None,
@@ -345,10 +334,6 @@ class SixvoxComissaoScraper:
                                 logging.info(f"  Vigência: {registro['vigencia']}")
                                 logging.info(f"  Proposta: {registro['proposta']}")
                                 logging.info(f"  Corretor: {registro['corretor'][:50]}...")
-                                logging.info(f"  Modalidade: {registro['modalidade']}")
-                                logging.info(f"  Qtd Vidas: {registro['qtd_vidas']}")
-                                logging.info(f"  Tipo Corretor: {registro['tipo_corretor']}")
-                                logging.info(f"  Vencimento: {registro['vencimento']}")
                         else:
                             logging.warning(f"Linha {i + row_index + 1} rejeitada - dados essenciais faltando")
                             
@@ -363,39 +348,7 @@ class SixvoxComissaoScraper:
             if dados:
                 logging.info("Amostra dos primeiros 3 registros processados:")
                 for i, registro in enumerate(dados[:3]):
-                    logging.info(f"Registro {i+1}:")
-                    logging.info(f"  Vigência: {registro['vigencia']}")
-                    logging.info(f"  Proposta: {registro['proposta']}")
-                    logging.info(f"  Corretor: {registro['corretor'][:30]}...")
-                    logging.info(f"  Modalidade: {registro['modalidade']}")
-                    logging.info(f"  Qtd Vidas: {registro['qtd_vidas']}")
-                    logging.info(f"  Valor Comissão: {registro['valor_comissao']}")
-                
-                logging.info(f"Extração de comissões concluída! Total de {len(dados)} registros válidos.")
-                return dados
-            else:
-                logging.warning("Nenhum registro válido foi encontrado após o processamento.")
-                return []
-            
-        except Exception as e:
-            logging.error(f"Erro ao extrair dados da tabela de comissões: {str(e)}")
-            return []_processed) <= 3:
-                                logging.info(f"DEBUG - Registro {len(dados) + len(batch_processed)} processado: Vigência={registro['vigencia']}, Proposta={registro['proposta']}, Corretor={registro['corretor'][:50]}...")
-                        else:
-                            logging.warning(f"Linha {i + row_index + 1} rejeitada - dados essenciais faltando")
-                            
-                    except Exception as row_error:
-                        logging.error(f"Erro ao processar linha {i + row_index + 1}: {str(row_error)}")
-                        continue
-                
-                dados.extend(batch_processed)
-                logging.info(f"Processado lote de {len(batch_processed)} registros... Total atual: {len(dados)}")
-            
-            # Mostrar amostra dos dados processados
-            if dados:
-                logging.info("Amostra dos primeiros 3 registros processados:")
-                for i, registro in enumerate(dados[:3]):
-                    logging.info(f"Registro {i+1}: Vigência={registro['vigencia']}, Proposta={registro['proposta']}, Corretor={registro['corretor'][:30]}..., Valor={registro['valor_comissao']}")
+                    logging.info(f"Registro {i+1}: Vigência={registro['vigencia']}, Proposta={registro['proposta']}, Corretor={registro['corretor'][:30]}...")
                 
                 logging.info(f"Extração de comissões concluída! Total de {len(dados)} registros válidos.")
                 return dados
