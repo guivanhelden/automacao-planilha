@@ -288,7 +288,7 @@ class SixvoxComissaoScraper:
                             'proposta': str(row[3]).strip() if len(row) > 3 else '',  # 3613834
                             'titular': str(row[4]).strip() if len(row) > 4 else '',  # ROSEMEIRE GOMES
                             'tipo': str(row[5]).strip() if len(row) > 5 else '',  # PF
-                            'modalidade': str(row[6]).strip() if len(row) > 6 else '',  # HAPVIDA CLINIPAM (266)
+                            'operadora': str(row[6]).strip() if len(row) > 6 else '',  # HAPVIDA CLINIPAM (266)
                             'administradora': str(row[7]).strip() if len(row) > 7 else '',  # -DIRETO
                             'parcela': safe_int_convert(row[8]) if len(row) > 8 else 0,  # 1
                             'base_de_calculo': self.limpar_valor_monetario(row[9]) if len(row) > 9 else 0.0,  # R$ 737,94
@@ -305,7 +305,7 @@ class SixvoxComissaoScraper:
                             'data_cadastro': self.converter_data(row[20]) if len(row) > 20 else None,  # 06/11/2024
                             'cod_regra_corretor': safe_int_convert(row[21]) if len(row) > 21 else 0,  # 956
                             'cod_regra': safe_int_convert(row[22]) if len(row) > 22 else 0,  # 664
-                            'operadora': str(row[23]).strip() if len(row) > 23 else '',  # INDIVIDUAL SAÚDE (182)
+                            'modalidade': str(row[23]).strip() if len(row) > 23 else '',  # INDIVIDUAL SAÚDE (182)
                             'qtd_vidas': safe_int_convert(row[24]) if len(row) > 24 else 0,  # 1
                             'vencimento': self.converter_data(row[25]) if len(row) > 25 else None,  # 15/11/2024
                             'comissao_paga_supervisor': self.limpar_valor_monetario(row[26]) if len(row) > 26 else 0.0,  # R$ 0,00
@@ -316,8 +316,8 @@ class SixvoxComissaoScraper:
                             
                             # SKUs extraídos para melhor análise
                             'sku_corretor': self.extrair_sku(row[2]) if len(row) > 2 else None,  # (4837)
-                            'sku_modalidade': self.extrair_sku(row[6]) if len(row) > 6 else None,  # (266)
-                            'sku_operadora': self.extrair_sku(row[23]) if len(row) > 23 else None,  # (182)
+                            'sku_modalidade': self.extrair_sku(row[23]) if len(row) > 23 else None,  # (266)
+                            'sku_operadora': self.extrair_sku(row[6]) if len(row) > 6 else None,  # (182)
                             'sku_administradora': None  # Não há SKU para administradora neste caso (-DIRETO)
                         }
                         
