@@ -1,4 +1,4 @@
-name: Automação Comissão
+name: Automação Comissão 2
 on:
   workflow_dispatch:
   schedule:
@@ -60,5 +60,5 @@ jobs:
       - name: Executar script de automação
         run: |
           set -o pipefail
-          python automacao_comissao.py | tee automacao_comissao.log
+          python automacao_comissao_2.py | tee automacao_comissao_2.log
         continue-on-error: false
