@@ -57,7 +57,7 @@ class SixvoxComissaoScraper:
     
     def login(self):
         try:
-            self.setup_driver(headless=True)  # Mudar para False para debug local
+            self.setup_driver(headless=True)
             self.driver.get("http://vhseguro.sixvox.com.br/")
             
             # Espera o campo de email estar disponível
@@ -94,7 +94,7 @@ class SixvoxComissaoScraper:
             ]
             
             for xpath, action_type, description in actions:
-                time.sleep(3)  # Pausa maior para estabilidade
+                time.sleep(3)
                 element = WebDriverWait(self.driver, 25).until(
                     EC.element_to_be_clickable((By.XPATH, xpath))
                 )
@@ -126,7 +126,7 @@ class SixvoxComissaoScraper:
             submit_button.click()
             
             logging.info("Aguardando carregamento do relatório de comissões...")
-            time.sleep(20)  # Tempo maior para carregamento de relatórios grandes
+            time.sleep(20)
             
             # Verificar se a tabela foi carregada
             try:
@@ -152,7 +152,7 @@ class SixvoxComissaoScraper:
             return False
 
     def limpar_valor_monetario(self, valor):
-        """Remove símbolos monetários e converte para float - otimizado para formato brasileiro"""
+        """Remove símbolos monetários e converte para float"""
         if not valor or valor == '':
             return 0.0
             
@@ -161,10 +161,23 @@ class SixvoxComissaoScraper:
         
         try:
             # Remove R$, espaços e outros caracteres
-            valor_limpo = str(valor).replace('R
+            valor_limpo = str(valor).replace('R$', '').strip()
+            
+            # Se estiver vazio após limpeza
+            if not valor_limpo:
+                return 0.0
+            
+            # Formato brasileiro: remove pontos de milhares e converte vírgula para ponto
+            valor_limpo = valor_limpo.replace('.', '').replace(',', '.')
+            
+            return float(valor_limpo)
+            
+        except (ValueError, AttributeError) as e:
+            logging.warning(f"Erro ao converter valor monetário '{valor}': {str(e)}")
+            return 0.0
     
     def converter_data(self, data_str):
-        """Converte string de data para formato YYYY-MM-DD - otimizado para formato brasileiro"""
+        """Converte string de data para formato YYYY-MM-DD"""
         if not data_str or str(data_str).strip() == '':
             return None
         
@@ -206,7 +219,7 @@ class SixvoxComissaoScraper:
         if not valor_str or valor_str.strip() == '':
             return 0.0
         try:
-            return float(valor_str.replace('%', '').strip())
+            return float(valor_str.replace('%', '').replace(',', '.').strip())
         except ValueError:
             return 0.0
 
@@ -221,7 +234,7 @@ class SixvoxComissaoScraper:
                     row.cells.length > 0 && 
                     row.cells[0] && 
                     row.cells[0].innerText.trim() !== '' &&
-                    row.cells[0].innerText.includes('/')  // Filtro para linhas que têm data
+                    row.cells[0].innerText.includes('/')
                 );
                 return rows.map(row => Array.from(row.cells).map(cell => cell.innerText.trim()));
             """
@@ -243,13 +256,13 @@ class SixvoxComissaoScraper:
                 for row_index, row in enumerate(batch):
                     try:
                         # Validação mais robusta do número de colunas
-                        if len(row) < 15:  # Mínimo necessário
+                        if len(row) < 15:
                             logging.warning(f"Linha {i + row_index + 1} com apenas {len(row)} colunas - pulando")
                             continue
                         
                         # Conversão segura de parcela
                         def safe_int_convert(value, default=0):
-                            if not value or value.strip() == '':
+                            if not value or str(value).strip() == '':
                                 return default
                             try:
                                 return int(''.join(filter(str.isdigit, str(value))) or default)
@@ -258,7 +271,7 @@ class SixvoxComissaoScraper:
                         
                         # Conversão segura de percentual
                         def safe_percent_convert(value):
-                            if not value or value.strip() == '':
+                            if not value or str(value).strip() == '':
                                 return 0.0
                             try:
                                 clean_value = str(value).replace('%', '').replace(',', '.').strip()
@@ -350,273 +363,14 @@ class SixvoxComissaoScraper:
             if self.limpar_tabela_supabase():
                 logging.info(f"Salvando {len(dados)} registros de comissões no Supabase...")
                 
-                batch_size = 100  # Lotes menores para tabelas de comissão que são maiores
+                batch_size = 100
                 for i in range(0, len(dados), batch_size):
                     batch = dados[i:i+batch_size]
                     
                     try:
                         response = self.supabase.table('comissoes').insert(batch).execute()
                         logging.info(f"Lote {i//batch_size + 1} salvo: {len(batch)} registros")
-                        time.sleep(0.5)  # Pausa entre lotes
-                    except Exception as batch_error:
-                        logging.error(f"Erro ao salvar lote {i//batch_size + 1}: {str(batch_error)}")
-                        return False
-                
-                logging.info("Dados de comissões salvos com sucesso!")
-                return True
-            return False
-        except Exception as e:
-            logging.error(f"Erro ao salvar dados de comissões: {str(e)}")
-            return False
-    
-    def executar_scraping_comissoes(self):
-        try:
-            if not self.login():
-                raise Exception("Falha no login")
-                
-            if not self.navegar_para_relatorio_comissao():
-                raise Exception("Falha na navegação para o relatório de comissões")
-                
-            dados = self.extrair_dados_tabela_comissao()
-            if not dados:
-                raise Exception("Nenhum dado de comissão extraído")
-                
-            if not self.salvar_comissoes_no_supabase(dados):
-                raise Exception("Falha ao salvar dados de comissões no Supabase")
-                
-            logging.info("Processo de scraping de comissões concluído com sucesso!")
-            return True
-                
-        except Exception as e:
-            logging.error(f"Erro crítico durante a execução do scraping de comissões: {str(e)}")
-            return False
-                
-        finally:
-            if self.driver:
-                self.driver.quit()
-                logging.info("Driver do Chrome encerrado")
-
-if __name__ == "__main__":
-    try:
-        scraper = SixvoxComissaoScraper()
-        success = scraper.executar_scraping_comissoes()
-        if not success:
-            raise Exception("Falha na execução do scraping de comissões")
-    except Exception as e:
-        logging.error(f"Erro na execução principal: {str(e)}")
-        exit(1)
-, '').strip()
-            
-            # Se estiver vazio após limpeza
-            if not valor_limpo:
-                return 0.0
-            
-            # Se contém vírgula (formato brasileiro: 1.234,56)
-            if ',' in valor_limpo:
-                # Separa parte inteira da decimal
-                partes = valor_limpo.rsplit(',', 1)
-                if len(partes) == 2:
-                    parte_inteira = partes[0].replace('.', '')  # Remove pontos dos milhares
-                    parte_decimal = partes[1]
-                    valor_final = f"{parte_inteira}.{parte_decimal}"
-                else:
-                    valor_final = valor_limpo.replace(',', '.')
-            else:
-                # Se só tem pontos, assume que são separadores de milhares exceto o último
-                pontos = valor_limpo.count('.')
-                if pontos > 1:
-                    # Múltiplos pontos: todos são separadores de milhares
-                    valor_final = valor_limpo.replace('.', '')
-                elif pontos == 1:
-                    # Um ponto: pode ser decimal ou milhares
-                    partes = valor_limpo.split('.')
-                    if len(partes[1]) <= 2:  # Provavelmente decimal
-                        valor_final = valor_limpo
-                    else:  # Provavelmente separador de milhares
-                        valor_final = valor_limpo.replace('.', '')
-                else:
-                    valor_final = valor_limpo
-            
-            return float(valor_final)
-            
-        except (ValueError, AttributeError, IndexError) as e:
-            logging.warning(f"Erro ao converter valor monetário '{valor}': {str(e)}")
-            return 0.0
-    
-    def converter_data(self, data_str):
-        """Converte string de data para formato YYYY-MM-DD"""
-        if not data_str or data_str.strip() == '':
-            return None
-        try:
-            data = datetime.strptime(data_str.strip(), '%d/%m/%Y')
-            return data.strftime('%Y-%m-%d')
-        except:
-            return None
-
-    def extrair_sku(self, texto):
-        """Extrai o valor entre parênteses de um texto"""
-        if not texto:
-            return None
-        match = re.search(r'\((.*?)\)', texto)
-        return match.group(1) if match else None
-
-    def converter_percentual(self, valor_str):
-        """Converte string de percentual para float"""
-        if not valor_str or valor_str.strip() == '':
-            return 0.0
-        try:
-            return float(valor_str.replace('%', '').strip())
-        except ValueError:
-            return 0.0
-
-    def extrair_dados_tabela_comissao(self):
-        try:
-            logging.info("Iniciando extração dos dados de comissões...")
-            
-            # Script JavaScript otimizado para extrair dados
-            script_extracao = """
-                const rows = Array.from(document.querySelectorAll('tbody tr')).filter(row => 
-                    !row.classList.contains('Freezing') && 
-                    row.cells.length > 0 && 
-                    row.cells[0] && 
-                    row.cells[0].innerText.trim() !== '' &&
-                    row.cells[0].innerText.includes('/')  // Filtro para linhas que têm data
-                );
-                return rows.map(row => Array.from(row.cells).map(cell => cell.innerText.trim()));
-            """
-            
-            raw_data = self.driver.execute_script(script_extracao)
-            dados = []
-            
-            logging.info(f"Processando {len(raw_data)} registros de comissões...")
-            
-            # Para debug - mostrar as primeiras 5 linhas dos dados brutos
-            for i, row in enumerate(raw_data[:5]):
-                logging.info(f"DEBUG - Linha {i+1} dados brutos ({len(row)} colunas): {row}")
-            
-            batch_size = 100
-            for i in range(0, len(raw_data), batch_size):
-                batch = raw_data[i:i+batch_size]
-                batch_processed = []
-                
-                for row_index, row in enumerate(batch):
-                    try:
-                        # Validação mais robusta do número de colunas
-                        if len(row) < 15:  # Mínimo necessário
-                            logging.warning(f"Linha {i + row_index + 1} com apenas {len(row)} colunas - pulando")
-                            continue
-                        
-                        # Conversão segura de parcela
-                        def safe_int_convert(value, default=0):
-                            if not value or value.strip() == '':
-                                return default
-                            try:
-                                return int(''.join(filter(str.isdigit, str(value))) or default)
-                            except (ValueError, TypeError):
-                                return default
-                        
-                        # Conversão segura de percentual
-                        def safe_percent_convert(value):
-                            if not value or value.strip() == '':
-                                return 0.0
-                            try:
-                                clean_value = str(value).replace('%', '').replace(',', '.').strip()
-                                return float(clean_value) if clean_value else 0.0
-                            except (ValueError, TypeError):
-                                return 0.0
-                        
-                        registro = {
-                            'vigencia': self.converter_data(row[0]),
-                            'status': str(row[1]).strip() if len(row) > 1 else '',
-                            'corretor': str(row[2]).strip() if len(row) > 2 else '',
-                            'proposta': str(row[3]).strip() if len(row) > 3 else '',
-                            'titular': str(row[4]).strip() if len(row) > 4 else '',
-                            'tipo': str(row[5]).strip() if len(row) > 5 else '',
-                            'operadora': str(row[6]).strip() if len(row) > 6 else '',
-                            'administradora': str(row[7]).strip() if len(row) > 7 else '',
-                            'parcela': safe_int_convert(row[8]) if len(row) > 8 else 0,
-                            'base_de_calculo': self.limpar_valor_monetario(row[9]) if len(row) > 9 else 0.0,
-                            'data_repasse': self.converter_data(row[10]) if len(row) > 10 else None,
-                            'percentual_comissao': safe_percent_convert(row[11]) if len(row) > 11 else 0.0,
-                            'valor_comissao': self.limpar_valor_monetario(row[12]) if len(row) > 12 else 0.0,
-                            'percentual_corretor': safe_percent_convert(row[13]) if len(row) > 13 else 0.0,
-                            'comissao_paga_corretor': self.limpar_valor_monetario(row[14]) if len(row) > 14 else 0.0,
-                            'comissao_a_pagar': self.limpar_valor_monetario(row[15]) if len(row) > 15 else 0.0,
-                            'supervisor': str(row[16]).strip() if len(row) > 16 else '',
-                            'distribuidora': str(row[17]).strip() if len(row) > 17 else '',
-                            'equipe': str(row[18]).strip() if len(row) > 18 else '',
-                            'cnpj_cpf': str(row[19]).strip() if len(row) > 19 else '',
-                            'data_cadastro': self.converter_data(row[20]) if len(row) > 20 else None,
-                            # Novas colunas opcionais
-                            'cod_regra_corretor': safe_int_convert(row[21]) if len(row) > 21 else 0,
-                            'cod_regra': safe_int_convert(row[22]) if len(row) > 22 else 0,
-                            # Campos extraídos para melhor análise
-                            'sku_corretor': self.extrair_sku(row[2]) if len(row) > 2 else None,
-                            'sku_operadora': self.extrair_sku(row[6]) if len(row) > 6 else None,
-                            'sku_administradora': self.extrair_sku(row[7]) if len(row) > 7 else None
-                        }
-                        
-                        # Validação de qualidade dos dados
-                        if (registro['vigencia'] is not None and 
-                            registro['proposta'] and 
-                            len(registro['proposta'].strip()) > 0 and
-                            registro['corretor'] and 
-                            len(registro['corretor'].strip()) > 0):
-                            
-                            batch_processed.append(registro)
-                            
-                            # Log das primeiras 3 linhas processadas com sucesso
-                            if len(dados) + len(batch_processed) <= 3:
-                                logging.info(f"DEBUG - Registro {len(dados) + len(batch_processed)} processado: Vigência={registro['vigencia']}, Proposta={registro['proposta']}, Corretor={registro['corretor'][:50]}...")
-                        else:
-                            logging.warning(f"Linha {i + row_index + 1} rejeitada - dados essenciais faltando")
-                            
-                    except Exception as row_error:
-                        logging.error(f"Erro ao processar linha {i + row_index + 1}: {str(row_error)}")
-                        continue
-                
-                dados.extend(batch_processed)
-                logging.info(f"Processado lote de {len(batch_processed)} registros... Total atual: {len(dados)}")
-            
-            # Mostrar amostra dos dados processados
-            if dados:
-                logging.info("Amostra dos primeiros 3 registros processados:")
-                for i, registro in enumerate(dados[:3]):
-                    logging.info(f"Registro {i+1}: Vigência={registro['vigencia']}, Proposta={registro['proposta']}, Corretor={registro['corretor'][:30]}..., Valor={registro['valor_comissao']}")
-                
-                logging.info(f"Extração de comissões concluída! Total de {len(dados)} registros válidos.")
-                return dados
-            else:
-                logging.warning("Nenhum registro válido foi encontrado após o processamento.")
-                return []
-            
-        except Exception as e:
-            logging.error(f"Erro ao extrair dados da tabela de comissões: {str(e)}")
-            return []
-
-    def limpar_tabela_supabase(self):
-        try:
-            logging.info("Iniciando limpeza da tabela comissoes...")
-            response = self.supabase.table('comissoes').delete().neq('id', 0).execute()
-            logging.info("Tabela comissoes limpa com sucesso!")
-            return True
-        except Exception as e:
-            logging.error(f"Erro ao limpar tabela de comissões: {str(e)}")
-            return False
-
-    def salvar_comissoes_no_supabase(self, dados):
-        try:
-            if self.limpar_tabela_supabase():
-                logging.info(f"Salvando {len(dados)} registros de comissões no Supabase...")
-                
-                batch_size = 100  # Lotes menores para tabelas de comissão que são maiores
-                for i in range(0, len(dados), batch_size):
-                    batch = dados[i:i+batch_size]
-                    
-                    try:
-                        response = self.supabase.table('comissoes').insert(batch).execute()
-                        logging.info(f"Lote {i//batch_size + 1} salvo: {len(batch)} registros")
-                        time.sleep(0.5)  # Pausa entre lotes
+                        time.sleep(0.5)
                     except Exception as batch_error:
                         logging.error(f"Erro ao salvar lote {i//batch_size + 1}: {str(batch_error)}")
                         return False
