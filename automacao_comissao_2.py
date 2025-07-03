@@ -296,8 +296,8 @@ class SixvoxComissaoScraper:
                             'percentual_comissao': safe_percent_convert(row[11]) if len(row) > 11 else 0.0,  # 100.00
                             'valor_comissao': self.limpar_valor_monetario(row[12]) if len(row) > 12 else 0.0,  # R$ 813,41
                             'percentual_corretor': safe_percent_convert(row[13]) if len(row) > 13 else 0.0,  # 100.00
-                            'comissao_a_pagar': self.limpar_valor_monetario(row[14]) if len(row) > 14 else 0.0,  # R$ 737,94
-                            'comissao_paga_corretor': self.limpar_valor_monetario(row[15]) if len(row) > 15 else 0.0,  # R$ 737,94
+                            'comissao_paga_corretor': self.limpar_valor_monetario(row[14]) if len(row) > 14 else 0.0,  # R$ 737,94
+                            'comissao_a_pagar': self.limpar_valor_monetario(row[15]) if len(row) > 15 else 0.0,  # R$ 737,94                            
                             'supervisor': str(row[16]).strip() if len(row) > 16 else '',  # Leandro Lombardi (4489)
                             'distribuidora': str(row[17]).strip() if len(row) > 17 else '',  # (vazio)
                             'equipe': str(row[18]).strip() if len(row) > 18 else '',  # Leandro Lombardi (37)
