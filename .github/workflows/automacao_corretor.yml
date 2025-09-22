@@ -2,7 +2,7 @@ name: Automação Corretor
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 17 * * 5'  # Toda sexta-feira às 17:00 
+    - cron: '0 7 * * *'  # Toda sexta-feira às 17:00 
 
 jobs:
   executar-automacao:
