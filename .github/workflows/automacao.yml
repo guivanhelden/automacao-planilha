@@ -2,7 +2,7 @@ name: Automação Planilha
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/20 10-18 * * 1-5'
+    - cron: '*/20 10-20 * * 1-5'
     
 jobs:
   executar-automacao:
